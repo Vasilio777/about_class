@@ -46,12 +46,11 @@ class CoffeeMachine():
 
     def turn_off(self):
         """turn_off"""
-        self.__state = 'OFF'
+        self.__state = 'off'
         print('Bye! Whoop-whoop-whoop.')
 
-
     def request_coffee(self):
-        """request_coffee"""
+        """Coffee choice"""
         print(self.report())
         inp = input('What would you like? (espresso/latte/cappuccino):').lower()
         self.handle_input(inp) # decorator
@@ -62,14 +61,14 @@ class CoffeeMachine():
             print('wrong input (coffee type).', end='\n\n')
             self.request_coffee()
 
-    # TODO: it would be better to make a decorator
+    # TODO: decorator
     def handle_input(self, inp):
-        """handle_input"""
-        if inp.lower() == 'OFF':
+        """make me a decorator!"""
+        if inp.lower() == 'off':
             self.turn_off()
 
     def report(self):
-        """report"""
+        """Show the current status of the machine"""
         return f'\
             \nWater: {self.inventory["water"]}ml\
             \nMilk: {self.inventory["milk"]}ml\
@@ -78,7 +77,7 @@ class CoffeeMachine():
             \n'
 
     def check_resource(self, cost: int, ingredient: str) -> bool:
-        """check_resource"""
+        """True if amount of a resource is enough"""
         amount = self.inventory[ingredient]
         if cost > amount:
             print(f"Nope. Not enough {ingredient}.", end='\n\n')
@@ -87,7 +86,7 @@ class CoffeeMachine():
         return True
 
     def transaction(self, coffee_type: str):
-        """quarter, dimes, nickel, pennies = 0.25 0.1 0.05 0.01"""    
+        """Proceed a pay"""    
         total = 0
         coins_types = ["quarter", "dime", "nickel", "pennie"]
         coins_values = [0.25, 0.1, 0.05, 0.01]
@@ -104,6 +103,7 @@ class CoffeeMachine():
             for i, coin_type in enumerate(coins_types):
                 if inp.find(coin_type) != -1:
                     total += (float(re.search(r'\d+', inp).group()) * coins_values[i])
+                    total = round(total, 2)
                     endline = 'Maybe enough?'  if (total > coffee_cost) else random.choice(phrases)
                     print(f'inserted: ${total}.  {endline}')
                     success = True
@@ -115,22 +115,25 @@ class CoffeeMachine():
             self.handle_input(inp) # decorator
 
         if total >= coffee_cost:
-            self.take_resources(coffee_type)
-            self.inventory["money"] += coffee_cost
-            change = total - coffee_cost
-            if change > 0:
-                print()
-                print(f'Your change, meat bag. ${change}. Ding-ding-ding.')
-                print('=== processing... === ')
-                print(f'Your {coffee_type}.', end='\n\n')
-                print(self.request_coffee())
+            if self.take_resources(coffee_type):
+                self.inventory["money"] += coffee_cost
+                change = round(total - coffee_cost, 2)
+                if change >= 0:
+                    print()
+                    if change > 0:
+                        print(f'Your change, meat bag. ${change}. Ding-ding-ding.')
+                    print('=== processing... === ')
+                    print(f'Your {coffee_type}.', end='\n\n')
+                    print(self.request_coffee())
+            else:
+                print('You are late. Some ingredients are gone. Sry.')
+                self.request_coffee()
         else:
             if self.get_state() == 'ON':
                 print("A u kiddin' me? Not enough money. Money refunded.", end='\n\n')
                 self.request_coffee()
             elif total > 0:
                 print("Ok, scam. Don't forget your coins. Beep. Money refunded.")
-
 
     def check_resources(self, coffee_type: str):
         """check_resources"""
@@ -156,7 +159,6 @@ class CoffeeMachine():
 
         self.inventory = updated_inv
         return True
-
 
     def get_state(self) -> bool:
         """getter"""
